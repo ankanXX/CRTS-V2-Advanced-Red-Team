@@ -1,0 +1,29 @@
+Path 1 — Red Team Operations
+
+Overview
+
+Documentation of Path 1 of the Certified Red Team Specialist V2 (CRTS V2) practical environment by CyberWarFare Labs.
+
+This section contains the complete technical walkthrough, attack methodology, command execution, tools, screenshots, observations and findings from Path 1.
+
+Documentation
+
+The full technical report will be added here.
+
+Scope
+
+- Reconnaissance and Enumeration
+- Initial Access
+- Exploitation
+- Privilege Escalation
+- Lateral Movement
+- Post-Exploitation
+- Infrastructure Analysis
+
+Evidence & Findings
+
+Screenshots, command outputs, technical observations and relevant evidence will accompany the final report.
+
+Status
+
+Documentation in progress.
